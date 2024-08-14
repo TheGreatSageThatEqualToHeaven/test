@@ -1,4 +1,4 @@
--// library script private
+--// library script private
 getgenv().namehub = "Tentra Hub"
 local UserInputService = game:GetService('UserInputService')
 local LocalPlayer = game:GetService('Players').LocalPlayer
@@ -45,7 +45,6 @@ function Library:clear()
 		object:Destroy()
 	end
 end
-})
 
 function Library:exist()
     if not Library.core then return end
@@ -1345,4 +1344,3 @@ function Library:new()
     end
     return Tab
 end
-})
