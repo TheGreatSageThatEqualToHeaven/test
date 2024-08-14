@@ -45,6 +45,7 @@ function Library:clear()
 		object:Destroy()
 	end
 end
+})
 
 function Library:exist()
     if not Library.core then return end
