@@ -1,9 +1,50 @@
---// MemeSense Style Window with Rainbow Stroke + Softer Static Glow + Dragging + Ctrl Toggle + Blur Effect + Left Panel + Tabs //--
+--// MemeSense UI with Tabs + External Library Integration //--
 
 local Player = game.Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+
+-- Clear previous UI if any
+if PlayerGui:FindFirstChild("MemeSenseUI") then
+    PlayerGui.MemeSenseUI:Destroy()
+end
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MemeSenseUI"
+screenGui.Parent = PlayerGui
+
+-- Blur Effect
+local blur = Instance.new("BlurEffect")
+blur.Name = "MemeSenseBlur"
+blur.Size = 0
+blur.Parent = game.Lighting
+
+-- Main Window
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 700, 0, 500)
+mainFrame.Position = UDim2.new(0.5, -350, 0.5, -250)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+mainFrame.BorderSizePixel = 0
+mainFrame.ZIndex = 10
+mainFrame.Parent = screenGui
+mainFrame.Visible = true
+
+-- Glow (simplified)
+local function applyGlow(target, color, spread)
+    for i = 1, spread do
+        local glowFrame = Instance.new("Frame")
+        glowFrame.Size = UDim2.new(1, i * 2, 1, i * 2)
+        glowFrame.Position = UDim2.new(0, -i, 0, -i)
+        glowFrame.BackgroundColor3 = color
+        glowFrame.BorderSizePixel = 0
+        glowFrame.BackgroundTransparency = 0.9
+        glowFrame.ZIndex = target.ZIndex - 1
+        glowFrame.Parent = target
+    end
+end
+applyGlow(mainFrame, Color3.fromRGB(0, 255, 255), 6)
 
 -- Rainbow Stroke Creator
 local function createRainbowStroke(parent, yPos)
@@ -32,73 +73,30 @@ local function createRainbowStroke(parent, yPos)
         end
     end)
 end
+createRainbowStroke(mainFrame, 0)
+createRainbowStroke(mainFrame, 498)
 
--- Glow Creator (Static)
-local function applyGlow(target, color, spread)
-    for i = 1, spread do
-        local glowFrame = Instance.new("Frame")
-        glowFrame.Size = UDim2.new(1, i * 2, 1, i * 2)
-        glowFrame.Position = UDim2.new(0, -i, 0, -i)
-        glowFrame.BackgroundColor3 = color
-        glowFrame.BorderSizePixel = 0
-        glowFrame.BackgroundTransparency = 0.9 -- lighter static glow
-        glowFrame.ZIndex = target.ZIndex - 1
-        glowFrame.Parent = target
-    end
-end
-
--- Create GUI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MemeSenseUI"
-screenGui.Parent = PlayerGui
-
--- Blur Effect
-local blur = Instance.new("BlurEffect")
-blur.Name = "MemeSenseBlur"
-blur.Size = 0
-blur.Parent = game.Lighting
-
--- Main Window
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 700, 0, 500)  -- wider and taller
-mainFrame.Position = UDim2.new(0.5, -350, 0.5, -250) -- centered
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-mainFrame.BorderSizePixel = 0
-mainFrame.ZIndex = 10
-mainFrame.Parent = screenGui
-mainFrame.Visible = true  -- Start visible
-
--- Left Panel (for tabs)
+-- Left Panel (Tabs)
 local leftPanel = Instance.new("Frame")
-leftPanel.Size = UDim2.new(0, 150, 1, 0) -- width 150px, full height of mainFrame
-leftPanel.Position = UDim2.new(0, 0, 0, 0) -- top-left inside mainFrame
+leftPanel.Size = UDim2.new(0, 150, 1, 0)
+leftPanel.Position = UDim2.new(0, 0, 0, 0)
 leftPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 leftPanel.BorderSizePixel = 0
 leftPanel.ZIndex = mainFrame.ZIndex + 1
 leftPanel.Parent = mainFrame
 
--- Content Panel (right side, for tab content)
-local contentPanel = Instance.new("Frame")
-contentPanel.Size = UDim2.new(1, -150, 1, 0) -- fill remaining space
-contentPanel.Position = UDim2.new(0, 150, 0, 0)
-contentPanel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-contentPanel.BorderSizePixel = 0
-contentPanel.ZIndex = mainFrame.ZIndex + 1
-contentPanel.Parent = mainFrame
+-- Right content area (where tab content goes)
+local contentArea = Instance.new("Frame")
+contentArea.Size = UDim2.new(1, -150, 1, 0)
+contentArea.Position = UDim2.new(0, 150, 0, 0)
+contentArea.BackgroundTransparency = 1
+contentArea.Parent = mainFrame
 
--- Glow (Bright Cyan but softer)
-applyGlow(mainFrame, Color3.fromRGB(0, 255, 255), 6)
-
--- Rainbow Strokes
-createRainbowStroke(mainFrame, 0)    -- Top stroke
-createRainbowStroke(mainFrame, 498)  -- Bottom stroke
-
--- Dragging Functionality (same as before)
+-- Dragging functionality (same as before)
 local dragging = false
 local dragInput = nil
 local dragStart = nil
 local startPos = nil
-
 local function update(input)
     local delta = input.Position - dragStart
     mainFrame.Position = UDim2.new(
@@ -108,13 +106,11 @@ local function update(input)
         startPos.Y.Offset + delta.Y
     )
 end
-
 mainFrame.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = mainFrame.Position
-
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
                 dragging = false
@@ -122,13 +118,11 @@ mainFrame.InputBegan:Connect(function(input)
         end)
     end
 end)
-
 mainFrame.InputChanged:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         update(input)
@@ -137,16 +131,14 @@ end)
 
 -- Blur fade helper
 local blurTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
 local function fadeBlur(toSize)
     local tween = TweenService:Create(blur, blurTweenInfo, {Size = toSize})
     tween:Play()
 end
 
 -- Toggle UI & Blur on Ctrl press
-local uiOpen = true -- Start open
-fadeBlur(24)       -- Start with blur
-
+local uiOpen = true
+fadeBlur(24)
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
@@ -160,134 +152,80 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+-- Tab Management
+local tabs = {}
+local selectedTab = nil
+local tabButtonHeight = 40
+local tabSpacing = 2
 
---[[
-  TabManager Library
-  Usage:
-    local TabManager = loadstring(<tab library string>)()
-    TabManager:AddTab("Tab Name", function(contentFrame)
-        -- build UI inside contentFrame
-    end)
-]]
-
-local tabManagerSource = [[
-return function(leftPanel, contentPanel)
-    local TabManager = {}
-    TabManager.tabs = {}
-    TabManager.selectedTab = nil
-
-    local tabButtonContainer = Instance.new("ScrollingFrame")
-    tabButtonContainer.Size = UDim2.new(1, 0, 1, 0)
-    tabButtonContainer.BackgroundTransparency = 1
-    tabButtonContainer.ScrollBarThickness = 6
-    tabButtonContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    tabButtonContainer.Parent = leftPanel
-
-    local uiListLayout = Instance.new("UIListLayout")
-    uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    uiListLayout.FillDirection = Enum.FillDirection.Vertical
-    uiListLayout.Parent = tabButtonContainer
-
-    local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, 10)
-    padding.PaddingLeft = UDim.new(0, 8)
-    padding.PaddingRight = UDim.new(0, 8)
-    padding.Parent = tabButtonContainer
-
-    -- Helper to update canvas size based on children
-    local function updateCanvasSize()
-        local totalSize = 0
-        for _, child in pairs(tabButtonContainer:GetChildren()) do
-            if child:IsA("GuiButton") then
-                totalSize = totalSize + child.Size.Y.Offset + uiListLayout.Padding.Offset
-            end
+local function clearContent()
+    for _, child in ipairs(contentArea:GetChildren()) do
+        if not child:IsA("UIListLayout") then
+            child:Destroy()
         end
-        tabButtonContainer.CanvasSize = UDim2.new(0, 0, 0, totalSize + 10)
     end
-
-    -- AddTab method
-    function TabManager:AddTab(name, buildFunc)
-        local tabButton = Instance.new("TextButton")
-        tabButton.Name = name .. "TabButton"
-        tabButton.Size = UDim2.new(1, 0, 0, 40)
-        tabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        tabButton.TextColor3 = Color3.new(1, 1, 1)
-        tabButton.Font = Enum.Font.GothamSemibold
-        tabButton.TextSize = 18
-        tabButton.Text = name
-        tabButton.AutoButtonColor = false
-        tabButton.Parent = tabButtonContainer
-
-        local contentFrame = Instance.new("Frame")
-        contentFrame.Size = UDim2.new(1, 0, 1, 0)
-        contentFrame.BackgroundTransparency = 1
-        contentFrame.Visible = false
-        contentFrame.Parent = contentPanel
-
-        -- Build the tab content using the callback
-        buildFunc(contentFrame)
-
-        local function selectTab()
-            -- Deselect old tab
-            if TabManager.selectedTab then
-                TabManager.selectedTab.button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                TabManager.selectedTab.content.Visible = false
-            end
-            -- Select new tab
-            tabButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180) -- steel blue
-            contentFrame.Visible = true
-            TabManager.selectedTab = {
-                button = tabButton,
-                content = contentFrame
-            }
-        end
-
-        tabButton.MouseButton1Click:Connect(selectTab)
-
-        table.insert(TabManager.tabs, {
-            button = tabButton,
-            content = contentFrame,
-            selectTab = selectTab
-        })
-
-        -- If this is the first tab, select it automatically
-        if #TabManager.tabs == 1 then
-            selectTab()
-        end
-
-        updateCanvasSize()
-    end
-
-    return TabManager
 end
-]]
 
--- Load the TabManager library
-local TabManager = loadstring(tabManagerSource)()(leftPanel, contentPanel)
+local function selectTab(tabName)
+    if selectedTab then
+        -- Reset previous tab button style
+        tabs[selectedTab].Button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        tabs[selectedTab].Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+        tabs[selectedTab].Content.Visible = false
+    end
+    selectedTab = tabName
+    local tab = tabs[tabName]
+    tab.Button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    tab.Button.TextColor3 = Color3.new(1,1,1)
+    tab.Content.Visible = true
+end
 
--- Example of adding tabs using the library:
-TabManager:AddTab("Home", function(frame)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 50)
-    label.Position = UDim2.new(0, 0, 0, 10)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 24
-    label.Text = "Welcome to the Home Tab!"
-    label.Parent = frame
-end)
+-- Public API: Add Tab
+local Library = {}
 
-TabManager:AddTab("Settings", function(frame)
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 0, 50)
-    label.Position = UDim2.new(0, 0, 0, 10)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 24
-    label.Text = "Settings Tab Content Here"
-    label.Parent = frame
-end)
+function Library:AddTab(tabName, tabFunction)
+    if tabs[tabName] then
+        warn("Tab already exists: "..tabName)
+        return
+    end
 
--- Now you can create new tabs by calling TabManager:AddTab("TabName", function(frame) ... end)
+    -- Create tab button
+    local tabButton = Instance.new("TextButton")
+    tabButton.Size = UDim2.new(1, -10, 0, tabButtonHeight)
+    tabButton.Position = UDim2.new(0, 5, 0, (#tabs * (tabButtonHeight + tabSpacing)) + 5)
+    tabButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    tabButton.BorderSizePixel = 0
+    tabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tabButton.Font = Enum.Font.Gotham
+    tabButton.TextSize = 18
+    tabButton.Text = tabName
+    tabButton.Parent = leftPanel
+
+    -- Create content frame
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Size = UDim2.new(1, 0, 1, 0)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Visible = false
+    contentFrame.Parent = contentArea
+
+    -- Call the tab function passing the content frame (so library can add UI inside)
+    tabFunction(contentFrame)
+
+    -- Store in tabs table
+    tabs[tabName] = {
+        Button = tabButton,
+        Content = contentFrame
+    }
+
+    tabButton.MouseButton1Click:Connect(function()
+        selectTab(tabName)
+    end)
+
+    -- Auto-select first tab added
+    if not selectedTab then
+        selectTab(tabName)
+    end
+end
+
+-- Return Library table so user can call Library:AddTab(...)
+return Library
