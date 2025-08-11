@@ -1,0 +1,131 @@
+--// MemeSense Style UI Library //--
+local Library = {}
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Rainbow Stroke Function
+local function createRainbowStroke(parent, position, size)
+    local strokeFrame = Instance.new("Frame")
+    strokeFrame.Size = size
+    strokeFrame.Position = position
+    strokeFrame.BackgroundTransparency = 1
+    strokeFrame.BorderSizePixel = 0
+    strokeFrame.Parent = parent
+
+    local uiGradient = Instance.new("UIGradient")
+    uiGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255,0,0)),
+        ColorSequenceKeypoint.new(0.2, Color3.fromRGB(255,255,0)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0,255,0)),
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(0,255,255)),
+        ColorSequenceKeypoint.new(0.8, Color3.fromRGB(0,0,255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255,0,255))
+    })
+    uiGradient.Rotation = 0
+    uiGradient.Parent = strokeFrame
+
+    task.spawn(function()
+        while task.wait() do
+            uiGradient.Rotation = (uiGradient.Rotation + 1) % 360
+        end
+    end)
+end
+
+-- Main Window
+function Library:CreateWindow(title)
+    local screenGui = Instance.new("ScreenGui", PlayerGui)
+    screenGui.Name = "MemeSenseUI"
+
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(0, 600, 0, 400)
+    mainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    mainFrame.BorderSizePixel = 0
+    mainFrame.Parent = screenGui
+
+    createRainbowStroke(mainFrame, UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0, 2)) -- top
+    createRainbowStroke(mainFrame, UDim2.new(0, 0, 1, -2), UDim2.new(1, 0, 0, 2)) -- bottom
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, 0, 0, 30)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.TextSize = 20
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.Parent = mainFrame
+
+    local tabHolder = Instance.new("Frame")
+    tabHolder.Size = UDim2.new(0, 150, 1, -30)
+    tabHolder.Position = UDim2.new(0, 0, 0, 30)
+    tabHolder.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    tabHolder.BorderSizePixel = 0
+    tabHolder.Parent = mainFrame
+
+    local contentHolder = Instance.new("Frame")
+    contentHolder.Size = UDim2.new(1, -150, 1, -30)
+    contentHolder.Position = UDim2.new(0, 150, 0, 30)
+    contentHolder.BackgroundTransparency = 1
+    contentHolder.Parent = mainFrame
+
+    local tabs = {}
+
+    function Library:CreateTab(name)
+        local tabButton = Instance.new("TextButton")
+        tabButton.Size = UDim2.new(1, 0, 0, 30)
+        tabButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tabButton.Text = name
+        tabButton.Parent = tabHolder
+
+        local tabFrame = Instance.new("Frame")
+        tabFrame.Size = UDim2.new(1, 0, 1, 0)
+        tabFrame.BackgroundTransparency = 1
+        tabFrame.Visible = false
+        tabFrame.Parent = contentHolder
+
+        tabButton.MouseButton1Click:Connect(function()
+            for _, t in pairs(tabs) do
+                t.Frame.Visible = false
+            end
+            tabFrame.Visible = true
+        end)
+
+        table.insert(tabs, {Button = tabButton, Frame = tabFrame})
+        if #tabs == 1 then
+            tabFrame.Visible = true
+        end
+
+        return tabFrame
+    end
+
+    return self
+end
+
+-- Example Controls
+function Library:AddLabel(tab, text)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 30)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 18
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Parent = tab
+end
+
+function Library:AddButton(tab, text, callback)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -10, 0, 30)
+    button.Position = UDim2.new(0, 5, 0, 5)
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Text = text
+    button.Parent = tab
+
+    button.MouseButton1Click:Connect(function()
+        pcall(callback)
+    end)
+end
+
+return Library
